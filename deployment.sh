@@ -1,0 +1,1 @@
+gunicorn core.asgi:app -k uvicorn_worker.UvicornWorker
