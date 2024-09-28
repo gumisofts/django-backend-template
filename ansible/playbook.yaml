@@ -1,0 +1,44 @@
+- name: Django Application server set up
+  hosts: myhosts
+  tasks:
+    - name: Update packages
+      become: true
+      ansible.builtin.apt:
+        upgrade: yes
+
+    - name: Install Nginx and python
+      become: true
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - python3-dev
+          - python3-venv
+
+    - name: Getting code base
+      ansible.builtin.git:
+        accept_hostkey: true
+        clone: yes
+        update: yes
+        name: git@github.com:gumi-apps/django-backend-template.git
+        dest: app
+        force: yes
+
+    - name: Upload nginx conf
+      become: true
+      ansible.builtin.copy:
+        force: true
+        src: ~/bita_markets/deployment/nginx.conf
+        dest: /etc/nginx/conf.d/
+
+    - name: Enable Nginx Services on Boot
+      ansible.builtin.systemd_service:
+        name: nginx
+        enabled: true
+        state: started
+    - name: Enable Bita_markets Service
+      become: true
+      ansible.builtin.systemd_service:
+        name: bita_markets
+        enabled: true
+        state: started
+        daemon_reload: true
