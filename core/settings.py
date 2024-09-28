@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+
 load_dotenv("config/app.env")
 env = os.getenv
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,7 +19,7 @@ ALLOWED_HOSTS = [
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
 
-
+AUTH_USER_MODEL = "account.User"
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "auth",
 ]
 
 MIDDLEWARE = [
