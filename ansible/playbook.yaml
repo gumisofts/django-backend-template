@@ -22,6 +22,18 @@
         name: git@github.com:gumi-apps/django-backend-template.git
         dest: app
         force: yes
+    - name: Setup socket
+      become: true
+      ansible.builtin.copy:
+        force: true
+        src: ~/dj/deployement/app.socket
+        dest: /etc/systemd/system/app.socket
+    - name: Setup Service
+      become: true
+      ansible.builtin.copy:
+        force: true
+        src: ~/dj/deployement/app.socket
+        dest: /etc/systemd/system/app.socket
 
     - name: Upload nginx conf
       become: true
