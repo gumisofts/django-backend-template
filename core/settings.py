@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 load_dotenv("config/app.env")
+load_dotenv("config/.env")
 env = os.getenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,6 +22,7 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
 
 AUTH_USER_MODEL = "account.User"
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -19,12 +19,20 @@ app = ProtocolTypeRouter(
         "http": asgi_app,
         # WebSocket chat handler
         "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(
-                URLRouter(
-                    [
-                        path("auth/", auth_router),
-                    ]
-                )
+            URLRouter(
+                [
+                    path("test/", auth_router),
+                    path(
+                        "dev",
+                        AuthMiddlewareStack(
+                            URLRouter(
+                                [
+                                    path("auth/", auth_router),
+                                ]
+                            )
+                        ),
+                    ),
+                ]
             )
         ),
     }
