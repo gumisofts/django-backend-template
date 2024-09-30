@@ -27,7 +27,7 @@ class User(AbstractUser):
         max_length=255,
         unique=True,
         validators=[
-            RegexValidator(regex=r"^\+?((2519)|(09)|(07)|(2517))\d{8}$"),
+            RegexValidator(regex=r"^(7|9)\d{8}$"),
         ],
     )
     USERNAME_FIELD = "phone_number"

@@ -22,24 +22,46 @@
         name: git@github.com:gumi-apps/django-backend-template.git
         dest: app
         force: yes
-    - name: Setup socket
+    - name: Setup Environment for Django App
+      ansible.builtin.shell:
+        chdir: ~/app
+        cmd: python3 -m venv env
+    - name: Install Pip requirements
+      ansible.builtin.pip:
+        virtualenv: ~/app/env
+        requirements: ~/app/requirements.txt
+    - name: Setup unix socket
       become: true
       ansible.builtin.copy:
         force: true
-        src: ~/dj/deployement/app.socket
+        src: ../deployment/app.socket
         dest: /etc/systemd/system/app.socket
     - name: Setup Service
       become: true
       ansible.builtin.copy:
         force: true
-        src: ~/dj/deployement/app.socket
-        dest: /etc/systemd/system/app.socket
+        src: ../deployment/app.service
+        dest: /etc/systemd/system/app.service
+    - name: Copy Environmental Variables
+      # become: true
+      copy:
+        dest: ~/app/config/
+        force: true
+        src: ../config/.env
+
+    - name: Enable app Service
+      become: true
+      ansible.builtin.systemd_service:
+        name: app
+        state: started
+        enabled: true
+        daemon_reload: true
 
     - name: Upload nginx conf
       become: true
       ansible.builtin.copy:
         force: true
-        src: ~/bita_markets/deployment/nginx.conf
+        src: ../deployment/app.conf
         dest: /etc/nginx/conf.d/
 
     - name: Enable Nginx Services on Boot
