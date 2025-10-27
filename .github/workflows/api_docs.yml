@@ -37,8 +37,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install Dependencies
-        run: pip install poetry
-        run: poetry install
+        run: |
+          pip install poetry
+          poetry install
         shell: bash
       - name: Create Directory
         run: |
