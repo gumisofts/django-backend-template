@@ -31,9 +31,7 @@ class EmailBackend(ModelBackend):
     def user_can_authenticate(self, user):
         return super().user_can_authenticate(user)
 
-    def authenticate(
-        self, request,username=None, email=None, password=None, **kwargs
-    ):
+    def authenticate(self, request, username=None, email=None, password=None, **kwargs):
         if username is not None:
             email = username
         if email is None:
