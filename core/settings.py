@@ -1,27 +1,37 @@
-from pathlib import Path
 import os
-from dotenv import load_dotenv
 from datetime import timedelta
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qsl, urlparse
 
-load_dotenv("config/app.env")
-load_dotenv("config/.env")
-env = os.getenv
+from django.core.management.utils import get_random_secret_key
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = env("SECRET_KEY")
-DEBUG = env("DEBUG", False) == "True"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
+
+DEBUG = os.getenv("DJANGO_DEBUG", False) == "True"
 
 ALLOWED_HOSTS = [
     "localhost",
+    *os.getenv("DJANGO_ALLOWED_HOSTS", "").split(","),
 ]
 
 
 # Application definition
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:4000",
+    "http://127.0.0.1:4200",
+    *os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+]
 
-AUTH_USER_MODEL = "account.User"
-INSTALLED_APPS = [
+AUTH_USER_MODEL = "accounts.User"
+DEFAULT_APPS = [
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -29,8 +39,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    "corsheaders",
+]
+
+LOCAL_APPS = [
     "auth",
 ]
+
+INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -63,20 +88,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.app"
 ASGI_APPLICATION = "core.asgi.app"
 
+postgres_url = os.getenv(
+    "DJANGO_POSTGRES_URL", "postgres://postgres:developer@123@localhost:5432/dev"
+)
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
+postgres_url = urlparse(postgres_url)
 
 DATABASES = {
-    "dev": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB", "dev"),
-        "USER": env("POSTGRES_USER", "dev"),
-        "PASSWORD": env("POSTGRES_PASSWORD", "developer@123"),
-        "HOST": env("POSTGRES_HOST", "localhost"),
-        "PORT": env("POSTGRES_PORT", "5432"),
-        "CONN_MAX_AGE": None,
-        "OPTIONS": {"sslmode": env("POSTGRES_SSL_MODE")},
+    "default": {  # Change this on to default on production
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": postgres_url.path[1:],
+        "USER": postgres_url.username,
+        "PASSWORD": postgres_url.password,
+        "HOST": postgres_url.hostname,
+        "PORT": postgres_url.port,
+        "OPTIONS": dict[str, Any](parse_qsl(postgres_url.query)),
+        "DISABLE_SERVER_SIDE_CURSORS": True,
     },
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -84,9 +112,6 @@ DATABASES = {
     },
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -103,9 +128,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
+AUTHENTICATION_BACKENDS = [
+    "auth.backends.PhoneBackend",
+    "auth.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 LANGUAGE_CODE = "en-us"
 
@@ -116,13 +143,21 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-STATIC_URL = "static/"
+STATIC_URL = os.getenv("DJANGO_STATIC_URL", "/static/")
+STATIC_ROOT = os.getenv("DJANGO_STATIC_ROOT", os.path.join(BASE_DIR, "staticfiles"))
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+MEDIA_URL = os.getenv("DJANGO_MEDIA_URL", "/medias/")
+MEDIA_ROOT = os.getenv("DJANGO_MEDIA_ROOT", os.path.join(BASE_DIR, "medias"))
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -138,24 +173,28 @@ REST_FRAMEWORK = {
 
 EMAIL_USE_SSL = True
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_PORT = env("EMAIL_PORT")
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST")
+EMAIL_PORT = os.getenv("DJANGO_EMAIL_PORT")
+EMAIL_HOST_USER = os.getenv("DJANGO_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("DJANGO_EMAIL_HOST_PASSWORD")
 
 ADMIN = ("Murad", "nuradhussen082@gmail.com")
 
-CELERY_BROKER_URL = f"redis://{env('REDIS_USERNAME','default')}:{env('REDIS_PASSWORD','')}@{env('REDIS_HOST','localhost')}:{env('REDIS_PORT',6379)}"
-CELERY_BACKEND_URL = f"redis://{env('REDIS_USERNAME','default')}:{env('REDIS_PASSWORD','')}@{env('REDIS_HOST','localhost')}:{env('REDIS_PORT',6379)}"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_BACKEND_URL = os.getenv("CELERY_BACKEND_URL")
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=90),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        days=os.getenv("DJANGO_SIMPLE_JWT_ACCESS_TOKEN_LIFETIME", 90)
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=os.getenv("DJANGO_SIMPLE_JWT_REFRESH_TOKEN_LIFETIME", 90)
+    ),
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
-    "VERIFYING_KEY": SECRET_KEY,
+    "SIGNING_KEY": os.getenv("DJANGO_SIMPLE_JWT_SIGNING_KEY", SECRET_KEY),
+    "VERIFYING_KEY": os.getenv("DJANGO_SIMPLE_JWT_VERIFYING_KEY", SECRET_KEY),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
