@@ -2,9 +2,9 @@ name: Django Tests
 
 on:
   push:
-    branches: ["main", "dev-v01", "v01"]
+    branches: ["main", "v01"]
   pull_request:
-    branches: ["main", "dev-v01", "v01"]
+    branches: ["main", "v01"]
 
 env:
   SECRET_KEY: y)tb02r69qx3&qpw(!tgp800x)3l(q+(!fm$yv%gxwy0o_npd7

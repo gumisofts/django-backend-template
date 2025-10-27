@@ -2,9 +2,9 @@ name: Code Quality Check
 
 on:
   push:
-    branches: ["main", "dev-v01", "v01"]
+    branches: ["main", "v01"]
   pull_request:
-    branches: ["main", "dev-v01", "v01"]
+    branches: ["main", "v01"]
 
 jobs:
   code-check:
