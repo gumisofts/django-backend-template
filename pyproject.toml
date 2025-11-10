@@ -29,7 +29,7 @@ dependencies = [
 [tool.poetry]
 package-mode = false
 [tool.poetry.group.dev.dependencies]
-black = "^25.1.0"
+black = "^25.11.0"
 isort = "^6.0.1"
 flake8 = "^7.3.0"
 
